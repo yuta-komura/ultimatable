@@ -1,6 +1,3 @@
-from pprint import pprint
-
-# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -13,23 +10,53 @@ tf.compat.v1.disable_eager_execution()
 
 
 def calc_sma(df: pd.DataFrame, use_columns: str):
-    df = indicator.add_sma(df=df, value=22, use_columns=use_columns)
-    df = indicator.add_sma(df=df, value=34, use_columns=use_columns)
-    df = indicator.add_sma(df=df, value=55, use_columns=use_columns)
+    df = indicator.sma(df=df, value=1, use_columns=use_columns)
+    df = indicator.sma(df=df, value=2, use_columns=use_columns)
+    df = indicator.sma(df=df, value=3, use_columns=use_columns)
+    df = indicator.sma(df=df, value=5, use_columns=use_columns)
+    df = indicator.sma(df=df, value=6, use_columns=use_columns)
+    df = indicator.sma(df=df, value=8, use_columns=use_columns)
+    df = indicator.sma(df=df, value=13, use_columns=use_columns)
+    df = indicator.sma(df=df, value=21, use_columns=use_columns)
+    df = indicator.sma(df=df, value=34, use_columns=use_columns)
+    df = indicator.sma(df=df, value=55, use_columns=use_columns)
+    df = indicator.sma(df=df, value=89, use_columns=use_columns)
+    df = indicator.sma(df=df, value=144, use_columns=use_columns)
+    df = indicator.sma(df=df, value=233, use_columns=use_columns)
     return df
 
 
 def calc_ema(df: pd.DataFrame, use_columns: str):
-    df = indicator.add_ema(df=df, value=22, use_columns=use_columns)
-    df = indicator.add_ema(df=df, value=34, use_columns=use_columns)
-    df = indicator.add_ema(df=df, value=55, use_columns=use_columns)
+    df = indicator.ema(df=df, value=1, use_columns=use_columns)
+    df = indicator.ema(df=df, value=2, use_columns=use_columns)
+    df = indicator.ema(df=df, value=3, use_columns=use_columns)
+    df = indicator.ema(df=df, value=5, use_columns=use_columns)
+    df = indicator.ema(df=df, value=6, use_columns=use_columns)
+    df = indicator.ema(df=df, value=8, use_columns=use_columns)
+    df = indicator.ema(df=df, value=13, use_columns=use_columns)
+    df = indicator.ema(df=df, value=21, use_columns=use_columns)
+    df = indicator.ema(df=df, value=34, use_columns=use_columns)
+    df = indicator.ema(df=df, value=55, use_columns=use_columns)
+    df = indicator.ema(df=df, value=89, use_columns=use_columns)
+    df = indicator.ema(df=df, value=144, use_columns=use_columns)
+    df = indicator.ema(df=df, value=233, use_columns=use_columns)
     return df
 
 
 def calc_rsi(df: pd.DataFrame, use_columns: str):
-    df = indicator.add_rsi(df=df, value=22, use_columns=use_columns)
-    df = indicator.add_rsi(df=df, value=34, use_columns=use_columns)
-    df = indicator.add_rsi(df=df, value=55, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=1, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=2, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=3, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=5, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=6, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=8, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=13, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=21, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=34, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=55, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=89, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=144, use_columns=use_columns)
+    df = indicator.rsi(df=df, value=233, use_columns=use_columns)
     return df
 
 
@@ -111,6 +138,8 @@ def learnig(shift):
 
 database = "tradingbot"
 
+analysis_width = 5000
+
 sql = """
         select
             perp.date,
@@ -123,48 +152,52 @@ sql = """
             ohlcv_1min_bitflyer_perp perp
         order by
             date
-        limit 5000
         """
 basis = repository.read_sql(database=database, sql=sql)
 
-analysis = basis.copy()
-del analysis["date"]
-analysis = calc_indicators(df=analysis, use_columns="open")
-analysis = calc_indicators(df=analysis, use_columns="high")
-analysis = calc_indicators(df=analysis, use_columns="low")
-analysis = calc_indicators(df=analysis, use_columns="close")
+for i in range(len(basis) - 1 - analysis_width):
 
-shift_open = analysis.copy()
-shift_open["open"] = shift_open["open"].shift(-1)
-shift_open = shift_open.dropna()
-future_open = int(learnig(shift=shift_open)[0])
+    feature = basis.copy()[i:i + analysis_width]
 
-shift_high = analysis.copy()
-shift_high["high"] = shift_high["high"].shift(-1)
-shift_high = shift_high.dropna()
-future_high = int(learnig(shift=shift_high)[1])
+    analysis = feature.copy()
+    del analysis["date"]
+    analysis = calc_indicators(df=analysis, use_columns="open")
+    analysis = calc_indicators(df=analysis, use_columns="high")
+    analysis = calc_indicators(df=analysis, use_columns="low")
+    analysis = calc_indicators(df=analysis, use_columns="close")
 
-shift_low = analysis.copy()
-shift_low["low"] = shift_low["low"].shift(-1)
-shift_low = shift_low.dropna()
-future_low = int(learnig(shift=shift_low)[2])
+    shift_open = analysis.copy()
+    shift_open["open"] = shift_open["open"].shift(-1)
+    shift_open = shift_open.dropna()
+    future_open = int(learnig(shift=shift_open)[0])
 
-shift_close = analysis.copy()
-shift_close["close"] = shift_close["close"].shift(-1)
-shift_close = shift_close.dropna()
-future_close = int(learnig(shift=shift_close)[3])
+    shift_high = analysis.copy()
+    shift_high["high"] = shift_high["high"].shift(-1)
+    shift_high = shift_high.dropna()
+    future_high = int(learnig(shift=shift_high)[1])
 
-pprint(future_open)
-pprint(future_high)
-pprint(future_low)
-pprint(future_close)
+    shift_low = analysis.copy()
+    shift_low["low"] = shift_low["low"].shift(-1)
+    shift_low = shift_low.dropna()
+    future_low = int(learnig(shift=shift_low)[2])
 
-pprint(basis.tail(1))
+    shift_close = analysis.copy()
+    shift_close["close"] = shift_close["close"].shift(-1)
+    shift_close = shift_close.dropna()
+    future_close = int(learnig(shift=shift_close)[3])
 
+    shift_volume = analysis.copy()
+    shift_volume["volume"] = shift_volume["volume"].shift(-1)
+    shift_volume = shift_volume.dropna()
+    future_volume = learnig(shift=shift_volume)[4]
 
-# fig = plt.figure(figsize=(24, 12), dpi=50)
-# ax1 = fig.add_subplot(1, 1, 1)
-# line1, = ax1.plot(test_inv[:, 0])
-# line2, = ax1.plot(pred_inv[:, 0])
-# fig.savefig("backtest_result.png")
-# plt.show()
+    date = feature.iloc[len(feature) - 1].date
+    open = future_open
+    high = future_high
+    low = future_low
+    close = future_close
+    volume = future_volume
+
+    # sql = f"insert into future_ohlcv_1min_bitflyer_perp values('{date}',{open},{high},{low},{close},'{volume}')"
+    # repository.execute(database=database, sql=sql)
+    break

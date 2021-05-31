@@ -34,6 +34,16 @@ CREATE TABLE `ohlcv_1min_bitflyer_perp` (
   KEY `ohlcv_1min_bitflyer_perp1` (`date`)
 );
 
+CREATE TABLE `future_ohlcv_1min_bitflyer_perp` (
+  `date` datetime NOT NULL,
+  `open` int unsigned NOT NULL,
+  `high` int unsigned NOT NULL,
+  `low` int unsigned NOT NULL,
+  `close` int unsigned NOT NULL,
+  `volume` decimal(65,8) unsigned NOT NULL,
+  KEY `ohlcv_1min_bitflyer_perp1` (`date`)
+);
+
 CREATE TABLE `coinapi_key` (
   `key` varchar(255) NOT NULL,
   PRIMARY KEY (`key`)
