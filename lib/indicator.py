@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def add_rsi(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
+def rsi(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
     price_diff_df = df[use_columns].diff()
 
     up = price_diff_df.copy()
@@ -16,13 +16,13 @@ def add_rsi(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
     return df
 
 
-def add_sma(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
+def sma(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
     price_df = df[use_columns]
     df["sma{value}".format(value=value)] = price_df.rolling(value).mean()
     return df
 
 
-def add_ema(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
+def ema(df: pd.DataFrame, value: int, use_columns: str) -> pd.DataFrame:
     price_df = df[use_columns]
     sma = price_df.rolling(value).mean()[:value]
     df["ema{value}".format(value=value)] = \
