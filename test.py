@@ -10,53 +10,20 @@ tf.compat.v1.disable_eager_execution()
 
 
 def calc_sma(df: pd.DataFrame, use_columns: str):
-    df = indicator.sma(df=df, value=1, use_columns=use_columns)
-    df = indicator.sma(df=df, value=2, use_columns=use_columns)
-    df = indicator.sma(df=df, value=3, use_columns=use_columns)
-    df = indicator.sma(df=df, value=5, use_columns=use_columns)
-    df = indicator.sma(df=df, value=6, use_columns=use_columns)
-    df = indicator.sma(df=df, value=8, use_columns=use_columns)
-    df = indicator.sma(df=df, value=13, use_columns=use_columns)
-    df = indicator.sma(df=df, value=21, use_columns=use_columns)
-    df = indicator.sma(df=df, value=34, use_columns=use_columns)
-    df = indicator.sma(df=df, value=55, use_columns=use_columns)
-    df = indicator.sma(df=df, value=89, use_columns=use_columns)
-    df = indicator.sma(df=df, value=144, use_columns=use_columns)
-    df = indicator.sma(df=df, value=233, use_columns=use_columns)
+    for i in range(800):
+        df = indicator.sma(df=df, value=i + 1, use_columns=use_columns)
     return df
 
 
 def calc_ema(df: pd.DataFrame, use_columns: str):
-    df = indicator.ema(df=df, value=1, use_columns=use_columns)
-    df = indicator.ema(df=df, value=2, use_columns=use_columns)
-    df = indicator.ema(df=df, value=3, use_columns=use_columns)
-    df = indicator.ema(df=df, value=5, use_columns=use_columns)
-    df = indicator.ema(df=df, value=6, use_columns=use_columns)
-    df = indicator.ema(df=df, value=8, use_columns=use_columns)
-    df = indicator.ema(df=df, value=13, use_columns=use_columns)
-    df = indicator.ema(df=df, value=21, use_columns=use_columns)
-    df = indicator.ema(df=df, value=34, use_columns=use_columns)
-    df = indicator.ema(df=df, value=55, use_columns=use_columns)
-    df = indicator.ema(df=df, value=89, use_columns=use_columns)
-    df = indicator.ema(df=df, value=144, use_columns=use_columns)
-    df = indicator.ema(df=df, value=233, use_columns=use_columns)
+    for i in range(800):
+        df = indicator.ema(df=df, value=i + 1, use_columns=use_columns)
     return df
 
 
 def calc_rsi(df: pd.DataFrame, use_columns: str):
-    df = indicator.rsi(df=df, value=1, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=2, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=3, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=5, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=6, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=8, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=13, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=21, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=34, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=55, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=89, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=144, use_columns=use_columns)
-    df = indicator.rsi(df=df, value=233, use_columns=use_columns)
+    for i in range(800):
+        df = indicator.rsi(df=df, value=i + 1, use_columns=use_columns)
     return df
 
 
@@ -121,7 +88,7 @@ def learnig(shift):
     opt = tf.compat.v1.train.AdamOptimizer().minimize(mse)
     net.run(tf.compat.v1.global_variables_initializer())
 
-    epochs = 500
+    epochs = 100
     for e in range(epochs):
         net.run(opt, feed_dict={X: X_train, Y: y_train})
 
@@ -138,7 +105,7 @@ def learnig(shift):
 
 database = "tradingbot"
 
-analysis_width = 5000
+analysis_width = 1000
 
 sql = """
         select
@@ -150,10 +117,22 @@ sql = """
             perp.volume
         from
             ohlcv_1min_bitflyer_perp perp
+        # where
+            # perp.date between '2021-01-01 00:00:00' and '2021-05-01 00:00:00'
         order by
             date
         """
 basis = repository.read_sql(database=database, sql=sql)
+basis = basis.set_index("date")
+
+rule = "1min"
+basis["open"] = basis["open"].resample(rule).first()
+basis["high"] = basis["high"].resample(rule).max()
+basis["low"] = basis["low"].resample(rule).min()
+basis["close"] = basis["close"].resample(rule).last()
+basis["volume"] = basis["volume"].resample(rule).sum()
+basis = basis.dropna()
+basis = basis.reset_index()
 
 for i in range(len(basis) - 1 - analysis_width):
 
@@ -191,13 +170,12 @@ for i in range(len(basis) - 1 - analysis_width):
     shift_volume = shift_volume.dropna()
     future_volume = learnig(shift=shift_volume)[4]
 
-    date = feature.iloc[len(feature) - 1].date
+    date = feature.iloc[len(feature) - 1]["date"]
     open = future_open
     high = future_high
     low = future_low
     close = future_close
     volume = future_volume
 
-    # sql = f"insert into future_ohlcv_1min_bitflyer_perp values('{date}',{open},{high},{low},{close},'{volume}')"
-    # repository.execute(database=database, sql=sql)
-    break
+    sql = f"insert into future_ohlcv_1min_bitflyer_perp values('{date}',{open},{high},{low},{close},'{volume}')"
+    repository.execute(database=database, sql=sql)
