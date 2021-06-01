@@ -107,6 +107,9 @@ database = "tradingbot"
 
 analysis_width = 1000
 
+sql = "truncate future_ohlcv_1min_bitflyer_perp"
+repository.execute(database=database, sql=sql)
+
 sql = """
         select
             perp.date,
@@ -117,8 +120,6 @@ sql = """
             perp.volume
         from
             ohlcv_1min_bitflyer_perp perp
-        # where
-            # perp.date between '2021-01-01 00:00:00' and '2021-05-01 00:00:00'
         order by
             date
         """
@@ -179,3 +180,9 @@ for i in range(len(basis) - 1 - analysis_width):
 
     sql = f"insert into future_ohlcv_1min_bitflyer_perp values('{date}',{open},{high},{low},{close},'{volume}')"
     repository.execute(database=database, sql=sql)
+
+    basis.loc[basis["date"] == date, "open"] = open
+    basis.loc[basis["date"] == date, "high"] = high
+    basis.loc[basis["date"] == date, "low"] = low
+    basis.loc[basis["date"] == date, "close"] = close
+    basis.loc[basis["date"] == date, "volume"] = volume
