@@ -6,7 +6,7 @@ SCRIPT_DIR=$(
     pwd
 )
 
-. ${SCRIPT_DIR}/venv/bin/activate
+. ${SCRIPT_DIR}/.venv/bin/activate
 
 python ${SCRIPT_DIR}/initialize.py
 
